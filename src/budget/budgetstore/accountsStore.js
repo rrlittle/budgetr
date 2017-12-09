@@ -1,21 +1,26 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, useStrict } from "mobx";
+import { Flow } from "./flowStore";
 import Account from "./accountStore";
 import Scale from "./scale";
 import { WEEKLY, FR, MONTHLY, TU } from "rrule";
 import moment from "moment";
 import { timeFormat } from "d3";
 
+useStrict(true);
+
 export default class AccountsStore {
 	@observable accounts = [];
-	paddingTopContainer = observable();
-	paddingBottomContainer = observable();
-	paddingLeftContainer = observable();
-	paddingRightContainer = observable();
-
-	node = observable();
-
-	startDate = observable();
-	endDate = observable();
+	@observable paddingTop;
+	@observable paddingBottom;
+	@observable paddingLeft;
+	@observable paddingRight;
+	@observable width;
+	@observable height;
+	@observable start = moment().subtract(1, "day");
+	@observable end = moment().add(1, "day");
+	@observable tempFlow;
+	@observable tempTo;
+	@observable tempFrom;
 
 	yformat = undefined;
 	xformat = timeFormat("%d-%b-%y");
@@ -86,78 +91,91 @@ export default class AccountsStore {
 			.filter(d => d.date >= this.start);
 	}
 
-	@computed
-	get paddingTop() {
-		return this.paddingTopContainer.get();
-	}
-	@computed
-	get paddingBottom() {
-		return this.paddingBottomContainer.get();
-	}
-	@computed
-	get paddingLeft() {
-		return this.paddingLeftContainer.get();
-	}
-	@computed
-	get paddingRight() {
-		return this.paddingRightContainer.get();
-	}
-
-	@computed
-	get width() {
-		try {
-			return this.node.get().clientWidth;
-		} catch (err) {
-			console.warn("node note set");
-		}
-	}
-
-	@computed
-	get height() {
-		try {
-			return this.node.get().clientHeight;
-		} catch (err) {
-			console.warn("node note set");
-		}
-	}
-
-	@computed
-	get start() {
-		return this.startDate.get();
-	}
-	@computed
-	get end() {
-		return this.endDate.get();
-	}
-
-	// @computed
-	// get data() {}
-
 	constructor({
 		paddingTop = 30,
 		paddingBottom = 30,
 		paddingLeft = 30,
 		paddingRight = 30,
-		start = moment(),
+		start = moment().subtract(5, "days"),
 		end = moment().add(20, "days")
 	}) {
-		this.paddingTopContainer.set(paddingTop);
-		this.paddingBottomContainer.set(paddingBottom);
-		this.paddingLeftContainer.set(paddingLeft);
-		this.paddingRightContainer.set(paddingRight);
-		this.startDate.set(start);
-		this.endDate.set(end);
+		console.log(start, end);
+		this.paddingTop = paddingTop;
+		this.paddingBottom = paddingBottom;
+		this.paddingLeft = paddingLeft;
+		this.paddingRight = paddingRight;
+		this.setStart(start);
+		this.setEnd(end);
+		console.log(this.start);
+		console.log(this.end);
 	}
+
+	@action
+	dropTempFlow = () => {
+		this.tempFlow = undefined;
+		this.tempFrom = undefined;
+		this.tempTo = undefined;
+	};
+	@action
+	makeTempFlow = () => {
+		this.tempFlow = new Flow({});
+		return this.tempFlow;
+	};
+
+	@action saveTempFlow = () => {};
+
+	@action
+	setTempToAccount = accntName => {
+		this.tempTo = this.accounts.find(accnt => {
+			console.log(this.tempFrom, accnt, this.tempFrom !== accnt);
+			return accnt.name === accntName && accnt !== this.tempFrom;
+		});
+	};
+
+	@action
+	setTempFromAccount = accntName => {
+		this.tempFrom = this.accounts.find(
+			accnt => accnt.name === accntName && accnt !== this.tempTo
+		);
+	};
+
+	@action
+	addAccount = () => {
+		console.log("sasdfs");
+		this.accounts.push(
+			new Account({
+				accounts: this,
+				name: ""
+			})
+		);
+	};
+	@action
+	deleteAccount = i => {
+		this.accounts.remove(this.accounts[i]);
+	};
+
+	@action
+	setStart = start => {
+		let s = moment(start);
+		if (s < this.end) this.start = s;
+	};
+
+	@action
+	setEnd = end => {
+		let e = moment(end);
+		if (e > this.start) this.end = e;
+	};
 
 	/**set the node for the graph **/
 	@action
-	set_node(node) {
-		this.node.set(node);
-	}
+	set_node = node => {
+		this.width = node.clientWidth;
+		this.height = node.clientHeight;
+	};
 
 	/**fetch accounts from server **/
 	@action
-	fetchData() {
+	fetchData = () => {
 		let raw_json = [
 			{
 				name: "Landing Pad",
@@ -190,17 +208,5 @@ export default class AccountsStore {
 		this.accounts.replace(
 			raw_json.map(a => new Account({ accounts: this, ...a }))
 		);
-	}
-
-	@action
-	setStart(start) {
-		let s = moment(start);
-		if (s < this.endDate) this.startDate.set(s);
-	}
-
-	@action
-	setEnd(end) {
-		let e = moment(end);
-		if (e > this.startDate) this.endDate.set(e);
-	}
+	};
 }

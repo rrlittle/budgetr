@@ -7,7 +7,8 @@ import {
 	Label,
 	Dropdown,
 	Form,
-	Grid
+	Grid,
+	Header
 } from "semantic-ui-react";
 import { observer } from "mobx-react";
 import {
@@ -33,11 +34,9 @@ const Monthdays = observer(props => (
 						circular
 						color={
 							props.flow.bymonthday &&
-							props.flow.bymonthday.find(e => e === i + 1) ? (
-								"green"
-							) : (
-								"red"
-							)
+							props.flow.bymonthday.find(e => e === i + 1)
+								? "green"
+								: "red"
 						}
 						onClick={() => props.flow.toggleMonthday(i + 1)}
 					>
@@ -72,11 +71,9 @@ const Months = observer(props => (
 						circular
 						color={
 							props.flow.bymonth &&
-							props.flow.bymonth.find(entr => entr === i + 1) ? (
-								"green"
-							) : (
-								"red"
-							)
+							props.flow.bymonth.find(entr => entr === i + 1)
+								? "green"
+								: "red"
 						}
 						onClick={() => props.flow.toggleMonth(i + 1)}
 					>
@@ -106,11 +103,9 @@ const Weekdays = observer(props => (
 						circular
 						color={
 							props.flow.byweekday &&
-							props.flow.byweekday.find(entr => entr === e[1]) ? (
-								"green"
-							) : (
-								"red"
-							)
+							props.flow.byweekday.find(entr => entr === e[1])
+								? "green"
+								: "red"
 						}
 						onClick={() => props.flow.toggleWeekday(e[1])}
 					>
@@ -130,112 +125,8 @@ export default class FlowModal extends React.Component {
 			<div>
 				{flow ? (
 					<Modal open={Boolean(flow)}>
-						<Modal.Header>
-							<Input
-								fluid
-								placeholder="Flow Name"
-								value={flow.name}
-								onChange={(e, { value }) => {
-									console.log(value);
-									flow.setname(value);
-								}}
-							/>
-						</Modal.Header>
 						<Modal.Content>
-							<Input
-								fluid
-								labelPosition="right"
-								type="number"
-								placeholder="Amount"
-								value={flow.amnt}
-								onChange={(e, { value }) => flow.setamnt(+value)}
-							>
-								<Label basic>$</Label>
-								<input />
-							</Input>
-
-							<Form>
-								<Form.Field inline>
-									Every{" "}
-									<Input
-										placeholder="interval"
-										type="number"
-										value={flow.interval}
-										onChange={(e, { value }) => flow.setinterval(+value)}
-									/>
-									<Dropdown
-										placeholder="frequency"
-										search
-										options={[
-											{ text: "Years", value: YEARLY },
-											{ text: "Months", value: MONTHLY },
-											{ text: "Weeks", value: WEEKLY },
-											{ text: "Days", value: DAILY }
-										]}
-										value={flow.freq}
-										onChange={(e, { value }) => {
-											console.log(value);
-											flow.setfreq(+value);
-										}}
-									/>
-								</Form.Field>
-							</Form>
-
-							{
-								// if freq is weekly: mon - sun
-								// if freq is monthly or annually: 1-31
-								// if freq is annually: jan - dec
-							}
-
-							<Form>
-								<Form.Field inline>
-									Beginning{" "}
-									<Input
-										type="date"
-										value={flow.dtstart ? flow.dtstart.format("Y-MM-DD") : ""}
-										onChange={(e, { value }) => flow.setdtstart(value)}
-									/>
-								</Form.Field>
-							</Form>
-
-							<Form>
-								<Form.Field inline>
-									<Dropdown
-										options={[
-											{ text: "Forever", value: "Forever" },
-											{ text: "Until", value: "Until" },
-											{ text: "For", value: "For" }
-										]}
-										inline
-										value={flow.repitition}
-										onChange={(e, { value }) => flow.setrepitition(value)}
-									/>
-									{flow.repitition === "Until" && (
-										<Input
-											type="date"
-											value={flow.until.format("Y-MM-DD")}
-											onChange={(e, { value }) => flow.setuntil(value)}
-										/>
-									)}
-									{flow.repitition === "For" && (
-										<span>
-											<Input
-												type="number"
-												value={flow.count}
-												onChange={(e, { value }) =>
-													+value >= 1 && flow.setcount(parseInt(value, 0))}
-											/>
-											{" Events"}
-										</span>
-									)}
-								</Form.Field>
-							</Form>
-
-							{flow.freq === WEEKLY && <Weekdays flow={flow} />}
-							{(flow.freq === MONTHLY || flow.freq === YEARLY) && (
-								<Monthdays flow={flow} />
-							)}
-							{flow.freq === YEARLY && <Months flow={flow} />}
+							<FlowForm flow={flow} />
 						</Modal.Content>
 						<Modal.Actions>
 							<Button color="green" onClick={onDone}>
@@ -249,6 +140,116 @@ export default class FlowModal extends React.Component {
 				) : (
 					<div />
 				)}
+			</div>
+		);
+	}
+}
+
+@observer
+export class FlowForm extends React.Component {
+	render() {
+		let { flow } = this.props;
+		return (
+			<div>
+				<Header>
+					<Input
+						fluid
+						placeholder="Flow Name"
+						value={flow.name}
+						onChange={(e, { value }) => {
+							console.log(value);
+							flow.setname(value);
+						}}
+					/>
+				</Header>
+				<Input
+					fluid
+					labelPosition="right"
+					type="number"
+					placeholder="Amount"
+					value={flow.amnt}
+					onChange={(e, { value }) => flow.setamnt(+value)}
+				>
+					<Label basic>$</Label>
+					<input />
+				</Input>
+
+				<Form>
+					<Form.Field inline>
+						Every{" "}
+						<Input
+							placeholder="interval"
+							type="number"
+							value={flow.interval}
+							onChange={(e, { value }) => flow.setinterval(+value)}
+						/>
+						<Dropdown
+							placeholder="frequency"
+							search
+							options={[
+								{ text: "Years", value: YEARLY },
+								{ text: "Months", value: MONTHLY },
+								{ text: "Weeks", value: WEEKLY },
+								{ text: "Days", value: DAILY }
+							]}
+							value={flow.freq}
+							onChange={(e, { value }) => {
+								console.log(value);
+								flow.setfreq(+value);
+							}}
+						/>
+					</Form.Field>
+				</Form>
+
+				<Form>
+					<Form.Field inline>
+						Beginning{" "}
+						<Input
+							type="date"
+							value={flow.dtstart ? flow.dtstart.format("Y-MM-DD") : ""}
+							onChange={(e, { value }) => flow.setdtstart(value)}
+						/>
+					</Form.Field>
+				</Form>
+
+				<Form>
+					<Form.Field inline>
+						<Dropdown
+							options={[
+								{ text: "Forever", value: "Forever" },
+								{ text: "Until", value: "Until" },
+								{ text: "For", value: "For" }
+							]}
+							inline
+							value={flow.repitition}
+							onChange={(e, { value }) => flow.setrepitition(value)}
+						/>
+						{flow.repitition === "Until" && (
+							<Input
+								type="date"
+								value={flow.until.format("Y-MM-DD")}
+								onChange={(e, { value }) => flow.setuntil(value)}
+							/>
+						)}
+						{flow.repitition === "For" && (
+							<span>
+								<Input
+									type="number"
+									value={flow.count}
+									onChange={(e, { value }) =>
+										+value >= 1 && flow.setcount(parseInt(value, 0))}
+								/>
+								{" Events"}
+							</span>
+						)}
+					</Form.Field>
+				</Form>
+
+				{flow.freq === WEEKLY && <Weekdays flow={flow} />}
+				{(flow.freq === MONTHLY || flow.freq === YEARLY) && (
+					<Monthdays flow={flow} />
+				)}
+				{flow.freq === YEARLY && <Months flow={flow} />}
 			</div>
 		);
 	}

@@ -4,10 +4,10 @@ import moment from "moment";
 
 export default class Account {
 	@observable store;
-	nameBox = observable();
+	@observable name;
+	@observable color;
 	@observable flows = [];
 	@observable balances = [];
-	colorHex = observable();
 
 	constructor({
 		accounts,
@@ -21,45 +21,25 @@ export default class Account {
 		this.balances.replace(
 			balances.map(b => ({ date: moment(b.date, "MM/DD/Y"), bal: b.bal }))
 		);
-		this.nameBox.set(name);
-		this.colorHex.set(color);
+		this.name = name;
+		this.color = color;
 	}
-	@action
-	addBal(bal, date) {
-		this.balances.push({ date: date, bal: bal });
-	}
-	@action
-	deleteBal(bal) {
-		console.log(bal, this.balances.remove(bal));
-	}
+	@action addBal = (bal, date) => this.balances.push({ date: date, bal: bal });
+	@action deleteBal = bal => this.balances.remove(bal);
 
 	@action
-	addFlow() {
+	addFlow = () => {
 		let newflow = new Flow({});
 		this.flows.push(newflow);
 		return newflow;
-	}
+	};
 
 	@action
-	deleteFlow(flow) {
-		if (!this.flows.remove(flow)) console.warn("failed to delete flow", flow);
-	}
+	deleteFlow = flow =>
+		!this.flows.remove(flow) || console.warn("failed to delete flow", flow);
 
-	@action
-	setColor(color) {
-		this.colorHex.set(color);
-	}
-
-	@computed
-	get color() {
-		return this.colorHex.get();
-	}
-
-	@computed
-	get name() {
-		return this.nameBox.get();
-	}
-
+	@action setColor = color => (this.color = color);
+	@action setName = name => (this.name = name);
 	@computed
 	get data() {
 		if (!this.accounts.start || !this.accounts.end) {

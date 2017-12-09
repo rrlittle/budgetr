@@ -14,6 +14,7 @@ export class Flow {
 	}
 	@action
 	setname(name) {
+		console.log(name, this.nameBox);
 		this.nameBox.set(name);
 	}
 	amntBox = observable();

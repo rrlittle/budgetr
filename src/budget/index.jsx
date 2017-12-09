@@ -19,9 +19,13 @@ class Budget extends React.Component {
 		store: window.store
 	};
 	componentDidUpdate() {
+		console.log("updates");
 		this.state.store.set_node(this.refs.chart);
 	}
 	componentDidMount() {
+		window.addEventListener("resize", () =>
+			this.state.store.set_node(this.refs.chart)
+		);
 		this.state.store.set_node(this.refs.chart);
 		this.state.store.fetchData();
 	}
@@ -42,7 +46,7 @@ class Budget extends React.Component {
 						paddingRight: 0
 					}}
 				>
-					<Accounts accounts={this.state.store.accounts} />
+					<Accounts store={this.state.store} />
 				</Grid.Column>
 				<Grid.Column
 					width={12}

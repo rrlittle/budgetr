@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Button, List, Modal } from "semantic-ui-react";
+import { Card, Button, List, Modal, Input, Confirm } from "semantic-ui-react";
 import Flow from "./flow";
 import { observer } from "mobx-react";
 import { CirclePicker } from "react-color";
@@ -11,10 +11,18 @@ export default class Account extends React.Component {
 	state = {
 		showColorPicker: false,
 		flow: null,
-		showSanityCheck: false
+		showSanityCheck: false,
+		editHeader: false,
+		header: ""
 	};
+	componentDidMount() {
+		this.setState({
+			header: this.props.account.name
+		});
+	}
 	render() {
-		let { account } = this.props;
+		let { account, onDelete } = this.props;
+		let { editHeader, header, deleteAccount } = this.state;
 		return (
 			<Card className="Account">
 				<SanityModal
@@ -35,8 +43,46 @@ export default class Account extends React.Component {
 						this.setState({ flow: null });
 					}}
 				/>
+				<Confirm
+					onCancel={() => this.setState({ deleteAccount: false })}
+					onConfirm={() => {
+						onDelete();
+						this.setState({ deleteAccount: false });
+					}}
+					open={deleteAccount}
+				/>
 				<Card.Content>
-					<Card.Header>{account.name}</Card.Header>
+					<Card.Header>
+						{editHeader ? (
+							<Input
+								value={header}
+								onChange={(e, { value }) => this.setState({ header: value })}
+							/>
+						) : (
+							account.name
+						)}
+						<Button.Group floated="right" size="mini">
+							<Button
+								toggle
+								active={editHeader}
+								icon={editHeader ? "check" : "edit"}
+								onClick={() => {
+									account.setName(header);
+									this.setState({ editHeader: !editHeader });
+								}}
+							/>
+							<Button
+								icon="delete"
+								onClick={() => {
+									if (editHeader)
+										this.setState({ header: account.name, editHeader: false });
+									else {
+										this.setState({ deleteAccount: true });
+									}
+								}}
+							/>
+						</Button.Group>
+					</Card.Header>
 				</Card.Content>
 				<Card.Content
 					style={{ background: account.color }}
